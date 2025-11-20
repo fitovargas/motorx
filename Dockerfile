@@ -1,5 +1,5 @@
 FROM node:22-slim 
-WORKDIR /
+WORKDIR /code
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
