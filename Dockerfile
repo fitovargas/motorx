@@ -1,32 +1,17 @@
-# 1. IMAGEN BASE
-# Usamos una imagen Node.js moderna y estable
-FROM node:22-slim
-
-# 2. DIRECTORIO DE TRABAJO
-# Establecemos el directorio donde vivirá el código dentro del contenedor
+FROM node:22-slim 
 WORKDIR /app
-
-# 3. COPIAR ARCHIVOS DE INSTALACIÓN
 COPY package.json package-lock.json ./
-
-# 4. INSTALAR DEPENDENCIAS
-# 'npm ci' es ideal para Docker builds
 RUN npm ci
 
-# 5. COPIAR EL RESTO DEL CÓDIGO
-# Copiamos todos tus archivos (src, plugins, configs, etc.)
+# 1. Copiar el código *después* de la instalación para asegurar que todo esté en /app
 COPY . .
 
-# 6. COMPILAR LA APLICACIÓN
-# Ejecutamos tu script de compilación: "react-router build"
-# Esto crea los archivos estáticos de producción.
+# 2. Ejecutar la compilación
 RUN npm run build 
 
-# 7. EXPOSICIÓN DE PUERTO
-# El puerto 3000 es común para proyectos de Node/React/Vite. 
-# Si tu servidor 'react-router serve' usa un puerto diferente, cámbialo aquí.
-EXPOSE 3000
+# 3. Este comando de inicio es el que está fallando.
+# Vamos a intentar pasar el comando completo, aunque 'npm start' debería ser suficiente.
+# Si el error persiste, significa que 'react-router serve' tiene requisitos de entorno adicionales.
 
-# 8. COMANDO DE INICIO DEL SERVIDOR
-# Usamos tu script de inicio: "react-router serve"
+EXPOSE 3000
 CMD ["npm", "start"]
