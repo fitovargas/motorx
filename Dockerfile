@@ -1,6 +1,6 @@
 # 1. IMAGEN BASE
 # Usamos una imagen Node.js moderna y estable
-FROM node:20-slim
+FROM node:22-slim
 
 # 2. DIRECTORIO DE TRABAJO
 # Establecemos el directorio donde vivirá el código dentro del contenedor
