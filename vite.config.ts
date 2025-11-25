@@ -77,6 +77,14 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom'],
   },
+  // INICIO DE LA CORRECCIÓN: Se añade el target moderno 'es2022'
+  build: {
+    target: 'es2022',
+    // Si la advertencia sobre el tamaño de los chunks es molesta, puedes aumentarlo:
+    // chunkSizeWarningLimit: 1000, 
+  },
+  // FIN DE LA CORRECCIÓN
+
   clearScreen: false,
   server: {
     allowedHosts: true,
