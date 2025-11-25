@@ -10,14 +10,15 @@ COPY . .
 
 # SOLUCIÓN CRÍTICA para el error 'ENOENT: no such file or directory, scandir .../build/server/src/app/api'
 # El compilador de react-router-hono-server busca los archivos fuente 'src' dentro del directorio
-# de salida del SSR ('build/server'). Debemos forzar esta estructura de directorio antes de la compilación.
+# de salida del SSR ('build/server').
 
 # 1. Asegurar que el directorio de salida del SSR exista
 RUN mkdir -p build/server
 
-# 2. Copiar el código fuente ('src') dentro del directorio de salida del SSR ('build/server')
-# Esto permite que el escaneo de rutas (scandir) tenga éxito en la ubicación incorrecta que está buscando.
-RUN cp -r ./src ./build/server/
+# 2. **USANDO ENLACE SIMBÓLICO (Symlink):**
+# Enlazar la carpeta fuente real (/code/src) a la ubicación esperada (/code/build/server/src).
+# Esto debería engañar al compilador y permitirle acceder a los archivos.
+RUN ln -s /code/src /code/build/server/src
 
 # 3. Compilar la aplicación (genera build/client y actualiza build/server)
 RUN npm run build
@@ -35,6 +36,13 @@ COPY --from=builder /code/package.json ./
 RUN npm install --omit=dev
 
 # Copiar los resultados de la compilación (build/ y dist/)
+COPY --from=builder /code/build ./build
+COPY --from=builder /code/dist ./dist
+
+EXPOSE 4000 
+
+# Comando de inicio
+CMD ["npm", "start"]
 COPY --from=builder /code/build ./build
 COPY --from=builder /code/dist ./dist
 
