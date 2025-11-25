@@ -11,11 +11,7 @@ RUN npm ci
 # Copiar el código fuente
 COPY . .
 
-# Solución temporal al bug de 'react-router-hono-server':
-# El router necesita ver la carpeta 'src' dentro de la carpeta 'build/server'
-# para registrar rutas durante la compilación.
-RUN mkdir -p build/server
-RUN cp -r ./src ./build/server/
+
 
 # Compilar la aplicación (genera build/client y build/server)
 # Esto debería pasar ahora que 'src' está en build/server
