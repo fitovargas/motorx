@@ -5,19 +5,18 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
-# FIX: La compilación del router busca archivos fuente dentro del directorio de salida del SSR (`build/server/`).
-# Se requiere una compilación de dos pasos para crear primero el directorio `build/server/`, copiar los archivos fuente, y luego completar la compilación.
+# FIX ROBUSTO para ENOENT: El router busca archivos fuente dentro del directorio de salida del SSR (`build/server/`).
+# Haremos la preparación necesaria *antes* de la compilación para garantizar que el escaneo de rutas tenga éxito en el primer intento.
 
-# 1. Primera pasada de compilación (Crea `build/server` y falla en el escaneo de rutas)
-# `|| true` previene que Docker falle completamente en este paso.
-RUN npm run build || true
+# 1. Crear explícitamente el directorio de destino final del SSR para garantizar que exista.
+RUN mkdir -p build/server
 
-# 2. Copia la carpeta de código fuente 'src' al directorio de salida del SSR.
+# 2. Copia la carpeta de código fuente 'src' dentro del directorio de salida del SSR.
+# Esto pre-coloca los archivos en la ubicación que el router buscará durante la compilación.
 RUN cp -r ./src ./build/server/
 
-# 3. Segunda pasada de compilación (Debería tener éxito ahora que los archivos están en su sitio)
+# 3. Ejecutar la compilación única.
+# Ahora que `src` está en `build/server`, esta compilación debería tener éxito.
 RUN npm run build 
 
 EXPOSE 4000 
-
-CMD ["npm", "start"]
