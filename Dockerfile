@@ -12,17 +12,15 @@ COPY . .
 # El compilador de react-router-hono-server busca los archivos fuente 'src' dentro del directorio
 # de salida del SSR ('build/server').
 
-# 1. Asegurar que el directorio de salida del SSR exista
-RUN mkdir -p build/server
-
-# 2. **USANDO ENLACE SIMBÓLICO (Symlink):**
-# Enlazar la carpeta fuente real (/code/src) a la ubicación esperada (/code/build/server/src).
-# Esto debería engañar al compilador y permitirle acceder a los archivos.
-RUN ln -s /code/src /code/build/server/src
-
-# 3. Compilar la aplicación (genera build/client y actualiza build/server)
-RUN npm run build
-
+# 1. Ejecutar la compilación y los hacks en una sola instrucción para evitar que
+#    el build limpie y elimine el enlace simbólico necesario.
+#    Secuencia: mkdir -> ln -s (crea symlink) -> npm run build
+RUN mkdir -p build/server && \
+    ln -s /code/src /code/build/server/src && \
+    echo "--- DIAGNÓSTICO (Pre-Build) ---" && \
+    ls -l build/server && \
+    echo "--- Inicia la compilación react-router build ---" && \
+    npm run build
 
 # -----------------------------------------------------------------
 # ETAPA 2: PRODUCTION - Imagen final liviana
@@ -41,14 +39,5 @@ COPY --from=builder /code/dist ./dist
 
 EXPOSE 4000 
 
-# Comando de inicio
-CMD ["npm", "start"]
-COPY --from=builder /code/build ./build
-COPY --from=builder /code/dist ./dist
-
-EXPOSE 4000 
-
-# Comando de inicio
-CMD ["npm", "start"]
 # Comando de inicio
 CMD ["npm", "start"]
