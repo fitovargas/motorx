@@ -38,6 +38,7 @@ export default defineConfig({
     reactRouterHonoServer({
       serverEntryPoint: './__create/index.ts',
       runtime: 'node',
+      // Configuración de reactRouterHonoServer sin cambios.
     }),
     babel({
       include: ['src/**/*.{js,jsx,ts,tsx}'], // or RegExp: /src\/.*\.[tj]sx?$/
@@ -77,14 +78,10 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom'],
   },
-  // INICIO DE LA CORRECCIÓN: Se añade el target moderno 'es2022'
+  // Corregir el target para soportar Top-level await
   build: {
     target: 'es2022',
-    // Si la advertencia sobre el tamaño de los chunks es molesta, puedes aumentarlo:
-    // chunkSizeWarningLimit: 1000, 
   },
-  // FIN DE LA CORRECCIÓN
-
   clearScreen: false,
   server: {
     allowedHosts: true,
