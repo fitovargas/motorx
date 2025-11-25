@@ -1,20 +1,23 @@
 FROM node:22-slim 
-# Usamos /code como Working Directory para consistencia
 WORKDIR /code 
 
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
-# 2. Ejecutar la compilación (Crea las carpetas 'build/client' y 'build/server')
-RUN npm run build 
+# FIX: La compilación del router busca archivos fuente dentro del directorio de salida del SSR (`build/server/`).
+# Se requiere una compilación de dos pasos para crear primero el directorio `build/server/`, copiar los archivos fuente, y luego completar la compilación.
 
-# 3. FIX CRÍTICO: Copia la carpeta de código fuente 'src' dentro del bundle SSR 'build/server'.
-# El error original era: 'ENOENT: no such file or directory, scandir '/code/build/server/src/app/api'
-# Esto asegura que el router pueda escanear la estructura de archivos que necesita durante el arranque.
-RUN cp -r ./src ./build/server/ || true
+# 1. Primera pasada de compilación (Crea `build/server` y falla en el escaneo de rutas)
+# `|| true` previene que Docker falle completamente en este paso.
+RUN npm run build || true
+
+# 2. Copia la carpeta de código fuente 'src' al directorio de salida del SSR.
+RUN cp -r ./src ./build/server/
+
+# 3. Segunda pasada de compilación (Debería tener éxito ahora que los archivos están en su sitio)
+RUN npm run build 
 
 EXPOSE 4000 
 
-# 4. Comando de inicio
 CMD ["npm", "start"]
