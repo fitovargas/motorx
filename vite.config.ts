@@ -3,8 +3,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
-// El import de tsconfigPaths se mantiene comentado, ya que lo eliminamos como parte del intento #3.
-// import tsconfigPaths from 'vite-tsconfig-paths'; 
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { addRenderIds } from './plugins/addRenderIds';
 import { aliases } from './plugins/aliases';
 import consoleToParent from './plugins/console-to-parent';
@@ -28,14 +27,9 @@ export default defineConfig({
       '@hono/auth-js',
       'hono/context-storage',
       '@auth/core/errors',
-      // 'fsev...' // Asumimos que esta línea estaba incompleta en el snippet original
+      'fsevents',
+      // ...
     ],
-  },
-  // --- AÑADIR CONFIGURACIÓN DE TARGET PARA TOP-LEVEL AWAIT ---
-  build: {
-    // Establecer el target a 'esnext' para permitir el 'top-level await'
-    // en el bundle SSR, que es un error reportado por esbuild.
-    target: 'esnext',
   },
   plugins: [
     nextPublicProcessEnv(),
@@ -43,10 +37,6 @@ export default defineConfig({
     reactRouterHonoServer({
       serverEntryPoint: './__create/index.ts',
       runtime: 'node',
-      // SOLUCIÓN PARA DOCKER: Forzar la ruta absoluta del directorio fuente
-      // Usamos path.resolve(process.cwd()) para asegurar que la ruta sea /code/src/app
-      // dentro del contenedor Docker, sin depender de la resolución relativa de SSR.
-      appDirectory: path.resolve(process.cwd(), 'src/app'),
     }),
     babel({
       include: ['src/**/*.{js,jsx,ts,tsx}'], // or RegExp: /src\\/.*\\.[tj]sx?$/
@@ -70,25 +60,24 @@ export default defineConfig({
     consoleToParent(),
     loadFontsFromTailwindSource(),
     addRenderIds(),
-    aliases(),
     reactRouter(),
+    tsconfigPaths(),
+    aliases(),
     layoutWrapperPlugin(),
   ],
   resolve: {
-    // Mantenemos la prioridad de extensiones.
-    extensions: ['.jsx', '.tsx', '.mjs', '.js', '.ts', '.json'],
     alias: {
       lodash: 'lodash-es',
       'npm:stripe': 'stripe',
       stripe: path.resolve(__dirname, './src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
       '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
-      // Alias estándar '@/' que apunta a 'src/app'.
-      '@': path.resolve(__dirname, './src/app'),
-
-      // OCTAVA CORRECCIÓN: Revierte a la extensión .js confirmada por el usuario.
-      'src/app/utils/useUser': path.resolve(__dirname, './src/app/utils/useUser.js'),
-      'src/app/utils/useAuth': path.resolve(__dirname, './src/app/utils/useAuth.js'),
-    }
-  }
+      // El alias '@' apunta a la carpeta 'src'
+      // Esto permite importar desde cualquier subcarpeta de 'src', incluyendo 'utils'.
+      '@': path.resolve(__dirname, './src'),
+    },
+    // Corrección para el error ENOENT: Asegura que Vite intente resolver 
+    // archivos que se importan sin una extensión explícita.
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.node'],
+  },
 });
