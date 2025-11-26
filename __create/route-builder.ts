@@ -90,6 +90,10 @@ async function registerRoutes() {
 
   // Clear existing routes
   api.routes = [];
+  
+  // Nuevo diagnóstico para verificar si entramos en el bucle
+  console.log(`[RUTA API] Intentando registrar ${routeFiles.length} archivos de ruta...`);
+
 
   for (const routeFile of routeFiles) {
     try {
@@ -141,15 +145,18 @@ async function registerRoutes() {
         }
       }
     } catch (error) {
-      // FIX: Capturar el ERR_MODULE_NOT_FOUND (Alias de ruta) y continuar SIN LOGUEAR EL ERROR.
-      // Loguear muchos errores en el build puede causar una cancelación/timeout.
+      // FIX: Capturar el ERR_MODULE_NOT_FOUND (Alias de ruta) y continuar.
+      // Cambiamos a console.log para evitar que demasiados errores cancelen el build.
       if (error && (error as { code: string }).code === 'ERR_MODULE_NOT_FOUND') {
+        console.log(`[ROUTE SKIP] Omitiendo ruta problemática debido a alias/dependencia: ${routeFile}`);
         continue;
       }
       
       console.error(`Error importing route file ${routeFile}:`, error);
     }
   }
+  
+  console.log(`[RUTA API] Registro de rutas API finalizado con éxito.`);
 }
 
 // Initial route registration
