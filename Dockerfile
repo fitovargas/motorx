@@ -34,13 +34,7 @@ RUN npm install --omit=dev
 # Copiar los resultados de la compilación (build/client y build/server)
 COPY --from=builder /code/build ./build
 
-# --- FIX: Agregar start.sh para satisfacer al entorno de ejecución (Resuelve el error chmod) ---
-# 1. Copiar el script de inicio
-COPY start.sh /start.sh
-# 2. Asegurar que el script sea ejecutable
-RUN chmod +x /start.sh
-
 EXPOSE 4000 
 
-# Comando de inicio: Usar el script
-CMD ["/start.sh"]
+# Comando de inicio: Usar el comando original que no requiere start.sh
+CMD ["npm", "start"]
