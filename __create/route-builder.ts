@@ -1,5 +1,5 @@
 import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path'; // Importamos 'resolve'
 import { fileURLToPath } from 'node:url';
 import { Hono } from 'hono';
 import type { Handler } from 'hono/types';
@@ -8,12 +8,17 @@ import updatedFetch from '../src/__create/fetch';
 const API_BASENAME = '/api';
 const api = new Hono();
 
-// Obtener la ruta base del proyecto (similar a __dirname en node)
-// Usamos el 'process.cwd()' para obtener la ruta raíz '/code'
-// y apuntar directamente a la carpeta de origen de las rutas: src/app/api.
-const projectRoot = process.cwd();
-const API_ROOT_DIR = join(projectRoot, 'src', 'app', 'api');
-const __dirname = API_ROOT_DIR; // Usar API_ROOT_DIR como la base para el escaneo
+// Obtener la ruta base del proyecto de forma más robusta.
+// En un build SSR, este archivo (route-builder.ts) se compila y se ejecuta desde 
+// dentro de un directorio como 'build/server/assets/'.
+// Para apuntar a 'src/app/api' en la raíz del proyecto (/code), 
+// necesitamos subir varios niveles.
+// Usamos resolve() para obtener una ruta absoluta.
+const currentDir = fileURLToPath(new URL('.', import.meta.url));
+// Subimos desde el directorio de build/server/assets a la raíz de /code, 
+// y luego apuntamos a la carpeta de origen: src/app/api.
+// La estructura del build sugiere que necesitamos retroceder hasta la raíz del proyecto.
+const __dirname = resolve(currentDir, '..', '..', '..', 'src', 'app', 'api');
 
 if (globalThis.fetch) {
   globalThis.fetch = updatedFetch;
@@ -78,6 +83,7 @@ function getHonoPath(routeFile: string): { name: string; pattern: string }[] {
 async function registerRoutes() {
   const routeFiles = (
     await findRouteFiles(__dirname).catch((error) => {
+      // Este es el error reportado: ENOENT
       console.error('Error finding route files:', error);
       return [];
     })
