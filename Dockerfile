@@ -10,11 +10,7 @@ Copiar el código fuente
 
 COPY . .
 
-SOLUCIÓN CRÍTICA para el error 'ENOENT: no such file or directory, scandir .../build/server/src/app/api'
-
-La lógica para omitir rutas problemáticas está ahora en route-builder.ts, pero la inyección es necesaria.
-
-1. Ejecutar la compilación y el hack de copia TARGETED en una sola instrucción.
+SOLUCIÓN CRÍTICA: Hack para inyectar rutas API antes de la compilación de react-router-hono-server.
 
 RUN mkdir -p build/server/src/app/ && 
 
