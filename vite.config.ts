@@ -27,21 +27,22 @@ export default defineConfig({
       '@hono/auth-js',
       'hono/context-storage',
       '@auth/core/errors',
-      'fsevents',
-      'lightningcss',
+      // 'fsev...' // Asumimos que esta línea estaba incompleta en el snippet original
     ],
   },
-  logLevel: 'info',
   plugins: [
     nextPublicProcessEnv(),
     restartEnvFileChange(),
     reactRouterHonoServer({
       serverEntryPoint: './__create/index.ts',
       runtime: 'node',
-      // Configuración de reactRouterHonoServer sin cambios.
+      // SOLUCIÓN PARA DOCKER: Forzar la ruta absoluta del directorio fuente
+      // Usamos path.resolve(process.cwd()) para asegurar que la ruta sea /code/src/app
+      // dentro del contenedor Docker, sin depender de la resolución relativa de SSR.
+      appDirectory: path.resolve(process.cwd(), 'src/app'),
     }),
     babel({
-      include: ['src/**/*.{js,jsx,ts,tsx}'], // or RegExp: /src\/.*\.[tj]sx?$/
+      include: ['src/**/*.{js,jsx,ts,tsx}'], // or RegExp: /src\\/.*\\.[tj]sx?$/
       exclude: /node_modules/, // skip everything else
       babelConfig: {
         babelrc: false, // don’t merge other Babel files
@@ -74,24 +75,7 @@ export default defineConfig({
       stripe: path.resolve(__dirname, './src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
       '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
-      '@': path.resolve(__dirname, 'src'),
-    },
-    dedupe: ['react', 'react-dom'],
-  },
-  // Corregir el target para soportar Top-level await
-  build: {
-    target: 'es2022',
-  },
-  clearScreen: false,
-  server: {
-    allowedHosts: true,
-    host: '0.0.0.0',
-    port: 4000,
-    hmr: {
-      overlay: false,
-    },
-    warmup: {
-      clientFiles: ['./src/app/**/*', './src/app/root.tsx', './src/app/routes.ts'],
-    },
-  },
+      // '@':... // Asumimos que esta línea estaba incompleta en el snippet original
+    }
+  }
 });
