@@ -87,4 +87,10 @@ export default defineConfig({
   build: {
     target: 'es2022',
   },
+  // FIX: Evita que el bundler del servidor externalice los paquetes de routing, 
+  // lo que obliga a incluir la lógica de detección de rutas en el bundle 
+  // y evita el error de ENOENT por escaneo de archivos en tiempo de ejecución.
+  ssr: {
+    noExternal: ['react-router-hono-server', '@hono/auth-js'],
+  },
 });
