@@ -3,9 +3,8 @@ import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
-// CORRECCIÓN: Cambiado de 'vite-plugin-tsconfig-paths' a 'vite-tsconfig-paths'
-// para resolver el error 'ERR_MODULE_NOT_FOUND' en el contenedor Docker.
-import tsconfigPaths from 'vite-tsconfig-paths'; 
+// El import de tsconfigPaths se mantiene comentado, ya que lo eliminamos como parte del intento #3.
+// import tsconfigPaths from 'vite-tsconfig-paths'; 
 import { addRenderIds } from './plugins/addRenderIds';
 import { aliases } from './plugins/aliases';
 import consoleToParent from './plugins/console-to-parent';
@@ -71,17 +70,12 @@ export default defineConfig({
     consoleToParent(),
     loadFontsFromTailwindSource(),
     addRenderIds(),
-    // CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES (3er intento: Eliminar plugin de tsconfig)
-    // El error persiste en la resolución de rutas relativas sin extensión (e.g., useAuth).
-    // tsconfigPaths() podría estar interfiriendo con la resolución de extensiones.
-    // tsconfigPaths(),
     aliases(),
     reactRouter(),
     layoutWrapperPlugin(),
   ],
   resolve: {
-    // CORRECCIÓN: Definición explícita de extensiones de archivo para la resolución
-    // Esto asegura que imports sin extensión como './utils/useAuth' se resuelvan a .jsx, .tsx, etc.
+    // Mantenemos la lista de extensiones explícitas.
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       lodash: 'lodash-es',
@@ -91,6 +85,13 @@ export default defineConfig({
       '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
       // CORRECCIÓN: Agregar el alias estándar '@/' que apunta a 'src/app'.
       '@': path.resolve(__dirname, './src/app'),
-    }
-  }
+      
+      // CUARTA CORRECCIÓN EXPERIMENTAL: Alias específico para el hook 'useAuth'.
+      // Intentamos resolverlo explícitamente si existe con una extensión.
+      // Asumimos que es un .jsx o .tsx por el contexto de la aplicación React.
+      // Nota: Si el archivo existe con la extensión, por ejemplo, 'useAuth.jsx'
+      // este alias debería forzar la resolución.
+      '~/utils/useAuth': path.resolve(__dirname, './src/app/utils/useAuth'),
+    },
+  },
 });
