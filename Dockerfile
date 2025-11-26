@@ -1,40 +1,63 @@
 FROM node:22-slim AS builder
 WORKDIR /code
 
-# Instalar dependencias
+Instalar dependencias
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copiar el código fuente
+Copiar el código fuente
+
 COPY . .
 
-# SOLUCIÓN CRÍTICA para el error 'ENOENT: no such file or directory, scandir .../build/server/src/app/api'
-# El compilador de react-router-hono-server busca los archivos fuente 'src' dentro del directorio
-# de salida del SSR ('build/server').
-# La lógica para omitir rutas problemáticas está ahora en route-builder.ts, pero la inyección es necesaria.
+SOLUCIÓN CRÍTICA para el error 'ENOENT: no such file or directory, scandir .../build/server/src/app/api'
 
-# 1. Ejecutar la compilación y el hack de copia TARGETED en una sola instrucción.
-RUN mkdir -p build/server/src/app/ && \
-    cp -r ./src/app/api ./build/server/src/app/ && \
-    echo "--- DIAGNÓSTICO DE RUTA API INYECTADA ---" && \
-    ls -l build/server/src/app/api && \
-    echo "--- Inicia la compilación react-router build ---" && \
-    npm run build
+La lógica para omitir rutas problemáticas está ahora en route-builder.ts, pero la inyección es necesaria.
 
-# -----------------------------------------------------------------
-# ETAPA 2: PRODUCTION - Imagen final liviana
-# -----------------------------------------------------------------
+1. Ejecutar la compilación y el hack de copia TARGETED en una sola instrucción.
+
+RUN mkdir -p build/server/src/app/ && 
+
+cp -r ./src/app/api ./build/server/src/app/ && 
+
+echo "--- DIAGNÓSTICO DE RUTA API INYECTADA ---" && 
+
+ls -l build/server/src/app/api && 
+
+echo "--- Inicia la compilación react-router build ---" && 
+
+npm run build
+
+-----------------------------------------------------------------
+
+ETAPA 2: PRODUCTION - Imagen final liviana
+
+-----------------------------------------------------------------
+
 FROM node:22-slim AS production
 WORKDIR /code
 
-# Copiar solo las dependencias de producción de la etapa builder
+Copiar solo las dependencias de producción de la etapa builder
+
 COPY --from=builder /code/package.json ./
+
 RUN npm install --omit=dev
 
-# Copiar los resultados de la compilación (build/client y build/server)
-COPY --from=builder /code/build ./build
+Copiar los archivos de compilación desde la etapa builder
 
-EXPOSE 4000 
+COPY --from=builder /code/dist ./dist
 
-# Comando de inicio: Usar el comando original que no requiere start.sh
-CMD ["npm", "start"]
+--- FIX: Copiar el script de inicio requerido por la plataforma ---
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+-------------------------------------------------------------------
+
+Exponer el puerto de Hono
+
+EXPOSE 4000
+
+El ENTRYPOINT apunta al script que acabamos de copiar.
+
+ENTRYPOINT ["/start.sh"]
