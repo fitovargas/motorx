@@ -75,23 +75,21 @@ export default defineConfig({
     layoutWrapperPlugin(),
   ],
   resolve: {
-    // Mantenemos la lista de extensiones explícitas.
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+    // QUINTA CORRECCIÓN (Mantenida): Priorizar JSX/TSX.
+    extensions: ['.jsx', '.tsx', '.mjs', '.js', '.ts', '.json'],
     alias: {
       lodash: 'lodash-es',
       'npm:stripe': 'stripe',
       stripe: path.resolve(__dirname, './src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
       '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
-      // CORRECCIÓN: Agregar el alias estándar '@/' que apunta a 'src/app'.
+      // Alias estándar '@/' que apunta a 'src/app'.
       '@': path.resolve(__dirname, './src/app'),
-      
-      // CUARTA CORRECCIÓN EXPERIMENTAL: Alias específico para el hook 'useAuth'.
-      // Intentamos resolverlo explícitamente si existe con una extensión.
-      // Asumimos que es un .jsx o .tsx por el contexto de la aplicación React.
-      // Nota: Si el archivo existe con la extensión, por ejemplo, 'useAuth.jsx'
-      // este alias debería forzar la resolución.
-      '~/utils/useAuth': path.resolve(__dirname, './src/app/utils/useAuth'),
-    },
-  },
+
+      // SEXTA CORRECCIÓN: Alias explícitos para forzar la resolución de módulos sin extensión.
+      // Mapeamos la ruta que falla (sin extensión) a la ruta correcta (con extensión .js).
+      'src/app/utils/useUser': path.resolve(__dirname, './src/app/utils/useUser.js'),
+      'src/app/utils/useAuth': path.resolve(__dirname, './src/app/utils/useAuth.js'),
+    }
+  }
 });
