@@ -75,7 +75,7 @@ export default defineConfig({
     layoutWrapperPlugin(),
   ],
   resolve: {
-    // QUINTA CORRECCIÓN (Mantenida): Priorizar JSX/TSX.
+    // Mantenemos la prioridad de extensiones.
     extensions: ['.jsx', '.tsx', '.mjs', '.js', '.ts', '.json'],
     alias: {
       lodash: 'lodash-es',
@@ -86,8 +86,7 @@ export default defineConfig({
       // Alias estándar '@/' que apunta a 'src/app'.
       '@': path.resolve(__dirname, './src/app'),
 
-      // SEXTA CORRECCIÓN: Alias explícitos para forzar la resolución de módulos sin extensión.
-      // Mapeamos la ruta que falla (sin extensión) a la ruta correcta (con extensión .js).
+      // OCTAVA CORRECCIÓN: Revierte a la extensión .js confirmada por el usuario.
       'src/app/utils/useUser': path.resolve(__dirname, './src/app/utils/useUser.js'),
       'src/app/utils/useAuth': path.resolve(__dirname, './src/app/utils/useAuth.js'),
     }
