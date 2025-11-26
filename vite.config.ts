@@ -83,7 +83,8 @@ export default defineConfig({
       stripe: path.resolve(__dirname, './src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
       '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
-      // '@':... // Asumimos que esta línea estaba incompleta en el snippet original
+      // CORRECCIÓN: Agregar el alias estándar '@/' que apunta a 'src/app'.
+      '@': path.resolve(__dirname, './src/app'),
     }
   }
 });
