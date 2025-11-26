@@ -77,6 +77,9 @@ export default defineConfig({
     layoutWrapperPlugin(),
   ],
   resolve: {
+    // CORRECCIÓN: Definición explícita de extensiones de archivo para la resolución
+    // Esto asegura que imports sin extensión como './utils/useAuth' se resuelvan a .jsx, .tsx, etc.
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       lodash: 'lodash-es',
       'npm:stripe': 'stripe',
