@@ -80,4 +80,11 @@ export default defineConfig({
     // archivos que se importan sin una extensión explícita.
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.node'],
   },
+  // FIX: Agregar build.target para resolver el error de "Top-level await is not available"
+  // Esto es necesario porque el bundler (esbuild) utiliza Top-Level Await (TLA)
+  // en el bundle SSR, y el target por defecto (es2020) no lo soporta.
+  // Es2022 o esnext soporta TLA.
+  build: {
+    target: 'es2022',
+  },
 });
