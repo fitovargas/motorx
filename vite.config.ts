@@ -3,7 +3,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import tsconfigPaths from 'vite-plugin-tsconfig-paths';
 import { addRenderIds } from './plugins/addRenderIds';
 import { aliases } from './plugins/aliases';
 import consoleToParent from './plugins/console-to-parent';
@@ -29,6 +29,12 @@ export default defineConfig({
       '@auth/core/errors',
       // 'fsev...' // Asumimos que esta línea estaba incompleta en el snippet original
     ],
+  },
+  // --- AÑADIR CONFIGURACIÓN DE TARGET PARA TOP-LEVEL AWAIT ---
+  build: {
+    // Establecer el target a 'esnext' para permitir el 'top-level await'
+    // en el bundle SSR, que es un error reportado por esbuild.
+    target: 'esnext',
   },
   plugins: [
     nextPublicProcessEnv(),
