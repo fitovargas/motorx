@@ -12,13 +12,13 @@ COPY . .
 # El compilador de react-router-hono-server busca los archivos fuente 'src' dentro del directorio
 # de salida del SSR ('build/server').
 
-# 1. Ejecutar la compilación y los hacks en una sola instrucción para evitar que
-#    el build limpie y elimine el enlace simbólico necesario.
-#    Secuencia: mkdir -> ln -s (crea symlink) -> npm run build
-RUN mkdir -p build/server && \
-    ln -s /code/src /code/build/server/src && \
-    echo "--- DIAGNÓSTICO (Pre-Build) ---" && \
-    ls -l build/server && \
+# 1. Ejecutar la compilación y el hack de copia TARGETED en una sola instrucción para asegurar
+#    que la ruta '/code/build/server/src/app/api' exista justo antes de que el escaneo comience.
+#    Secuencia: mkdir -p (asegura la ruta base) -> cp -r (copia el contenido API) -> npm run build
+RUN mkdir -p build/server/src/app/ && \
+    cp -r ./src/app/api ./build/server/src/app/ && \
+    echo "--- DIAGNÓSTICO DE RUTA API INYECTADA ---" && \
+    ls -l build/server/src/app/api && \
     echo "--- Inicia la compilación react-router build ---" && \
     npm run build
 
@@ -33,9 +33,9 @@ COPY --from=builder /code/package.json ./
 # Usamos 'npm install' en lugar de 'npm ci' para solo obtener dependencias de producción.
 RUN npm install --omit=dev
 
-# Copiar los resultados de la compilación (build/ y dist/)
+# Copiar los resultados de la compilación (build/client y build/server)
 COPY --from=builder /code/build ./build
-COPY --from=builder /code/dist ./dist
+# Eliminamos la copia de 'dist' ya que la salida principal parece estar en 'build'.
 
 EXPOSE 4000 
 
