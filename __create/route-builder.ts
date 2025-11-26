@@ -1,23 +1,22 @@
 import { readdir, stat } from 'node:fs/promises';
-import { join, resolve } from 'node:path'; // Importamos 'resolve'
+import { join, resolve } from 'node:path'; 
 import { fileURLToPath } from 'node:url';
 import { Hono } from 'hono';
 import type { Handler } from 'hono/types';
 import updatedFetch from '../src/__create/fetch';
 
+// NOTA: Se ha eliminado el intento de usar 'tsconfig-paths' aquí, ya que causaba 
+// problemas en el entorno de build/runtime al intentar resolver los alias de importación 
+// como '@/app'. Estos alias deben ser resueltos por el bundler (Vite/esbuild) o
+// los archivos de ruta deben usar rutas relativas para las dependencias internas.
+
 const API_BASENAME = '/api';
 const api = new Hono();
 
 // Obtener la ruta base del proyecto de forma más robusta.
-// En un build SSR, este archivo (route-builder.ts) se compila y se ejecuta desde 
-// dentro de un directorio como 'build/server/assets/'.
-// Para apuntar a 'src/app/api' en la raíz del proyecto (/code), 
-// necesitamos subir varios niveles.
-// Usamos resolve() para obtener una ruta absoluta.
-const currentDir = fileURLToPath(new URL('.', import.meta.url));
 // Subimos desde el directorio de build/server/assets a la raíz de /code, 
 // y luego apuntamos a la carpeta de origen: src/app/api.
-// La estructura del build sugiere que necesitamos retroceder hasta la raíz del proyecto.
+const currentDir = fileURLToPath(new URL('.', import.meta.url));
 const __dirname = resolve(currentDir, '..', '..', '..', 'src', 'app', 'api');
 
 if (globalThis.fetch) {
@@ -48,7 +47,6 @@ async function findRouteFiles(dir: string): Promise<string[]> {
       // FIX: Ignorar el error ENOENT que ocurre si se intenta leer 
       // algo que no existe o que fue limpiado por el bundler.
       if (error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
-        // console.warn(`Skipping missing path: ${filePath}`);
         continue;
       }
       console.error(`Error reading file ${file}:`, error);
@@ -83,7 +81,6 @@ function getHonoPath(routeFile: string): { name: string; pattern: string }[] {
 async function registerRoutes() {
   const routeFiles = (
     await findRouteFiles(__dirname).catch((error) => {
-      // Este es el error reportado: ENOENT
       console.error('Error finding route files:', error);
       return [];
     })
@@ -98,9 +95,8 @@ async function registerRoutes() {
 
   for (const routeFile of routeFiles) {
     try {
-      // Utiliza la ruta del archivo de origen para la importación
-      // pero asegúrate de que el bundler pueda encontrarlo.
-      // Ya que no estamos en el entorno de build, usamos el path del sistema de archivos.
+      // Usamos import dinámico para cargar el módulo de ruta en tiempo de ejecución.
+      // /* @vite-ignore */ previene que Vite intente empaquetar este import.
       const route = await import(/* @vite-ignore */ `${routeFile}?update=${Date.now()}`);
 
       const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -112,6 +108,7 @@ async function registerRoutes() {
             const handler: Handler = async (c) => {
               const params = c.req.param();
               if (import.meta.env.DEV) {
+                // En desarrollo, re-importamos para hot-reloading
                 const updatedRoute = await import(
                   /* @vite-ignore */ `${routeFile}?update=${Date.now()}`
                 );
@@ -146,6 +143,17 @@ async function registerRoutes() {
         }
       }
     } catch (error) {
+      // FIX: Capturar el ERR_MODULE_NOT_FOUND (Alias de ruta) y continuar.
+      // Este error ocurre cuando el archivo de ruta importado usa un alias como '@/app'
+      // que el runtime de Node no puede resolver. Debemos ignorar estos archivos 
+      // para que la compilación no falle por completo.
+      if (error && (error as { code: string }).code === 'ERR_MODULE_NOT_FOUND') {
+        console.error(
+          `Skipping route ${routeFile} due to unresolved path alias (e.g., '@/app'). Please ensure dependencies within this file use relative paths or are correctly bundled.`,
+        );
+        continue;
+      }
+      
       console.error(`Error importing route file ${routeFile}:`, error);
     }
   }
