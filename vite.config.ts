@@ -3,7 +3,9 @@ import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
-import tsconfigPaths from 'vite-plugin-tsconfig-paths';
+// CORRECCIÓN: Cambiado de 'vite-plugin-tsconfig-paths' a 'vite-tsconfig-paths'
+// para resolver el error 'ERR_MODULE_NOT_FOUND' en el contenedor Docker.
+import tsconfigPaths from 'vite-tsconfig-paths'; 
 import { addRenderIds } from './plugins/addRenderIds';
 import { aliases } from './plugins/aliases';
 import consoleToParent from './plugins/console-to-parent';
