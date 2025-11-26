@@ -8,8 +8,13 @@ import updatedFetch from '../src/__create/fetch';
 const API_BASENAME = '/api';
 const api = new Hono();
 
-// Get current directory
-const __dirname = join(fileURLToPath(new URL('.', import.meta.url)), '../src/app/api');
+// Obtener la ruta base del proyecto (similar a __dirname en node)
+// Usamos el 'process.cwd()' para obtener la ruta raíz '/code'
+// y apuntar directamente a la carpeta de origen de las rutas: src/app/api.
+const projectRoot = process.cwd();
+const API_ROOT_DIR = join(projectRoot, 'src', 'app', 'api');
+const __dirname = API_ROOT_DIR; // Usar API_ROOT_DIR como la base para el escaneo
+
 if (globalThis.fetch) {
   globalThis.fetch = updatedFetch;
 }
@@ -35,6 +40,12 @@ async function findRouteFiles(dir: string): Promise<string[]> {
         }
       }
     } catch (error) {
+      // FIX: Ignorar el error ENOENT que ocurre si se intenta leer 
+      // algo que no existe o que fue limpiado por el bundler.
+      if (error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        // console.warn(`Skipping missing path: ${filePath}`);
+        continue;
+      }
       console.error(`Error reading file ${file}:`, error);
     }
   }
@@ -81,6 +92,9 @@ async function registerRoutes() {
 
   for (const routeFile of routeFiles) {
     try {
+      // Utiliza la ruta del archivo de origen para la importación
+      // pero asegúrate de que el bundler pueda encontrarlo.
+      // Ya que no estamos en el entorno de build, usamos el path del sistema de archivos.
       const route = await import(/* @vite-ignore */ `${routeFile}?update=${Date.now()}`);
 
       const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
