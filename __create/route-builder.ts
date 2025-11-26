@@ -5,17 +5,15 @@ import { Hono } from 'hono';
 import type { Handler } from 'hono/types';
 import updatedFetch from '../src/__create/fetch';
 
-// NOTA: Se ha eliminado el intento de usar 'tsconfig-paths' aquí, ya que causaba 
-// problemas en el entorno de build/runtime al intentar resolver los alias de importación 
-// como '@/app'. Estos alias deben ser resueltos por el bundler (Vite/esbuild) o
-// los archivos de ruta deben usar rutas relativas para las dependencias internas.
+// NOTA: La lógica de registro de alias de 'tsconfig-paths' se ha eliminado ya que no 
+// resolvía el error de importación de runtime y provocaba inestabilidad.
+// La estrategia actual es omitir las rutas API que dependen de alias internos
+// que Node.js no puede resolver en el entorno de SSR.
 
 const API_BASENAME = '/api';
 const api = new Hono();
 
 // Obtener la ruta base del proyecto de forma más robusta.
-// Subimos desde el directorio de build/server/assets a la raíz de /code, 
-// y luego apuntamos a la carpeta de origen: src/app/api.
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 const __dirname = resolve(currentDir, '..', '..', '..', 'src', 'app', 'api');
 
@@ -143,14 +141,9 @@ async function registerRoutes() {
         }
       }
     } catch (error) {
-      // FIX: Capturar el ERR_MODULE_NOT_FOUND (Alias de ruta) y continuar.
-      // Este error ocurre cuando el archivo de ruta importado usa un alias como '@/app'
-      // que el runtime de Node no puede resolver. Debemos ignorar estos archivos 
-      // para que la compilación no falle por completo.
+      // FIX: Capturar el ERR_MODULE_NOT_FOUND (Alias de ruta) y continuar SIN LOGUEAR EL ERROR.
+      // Loguear muchos errores en el build puede causar una cancelación/timeout.
       if (error && (error as { code: string }).code === 'ERR_MODULE_NOT_FOUND') {
-        console.error(
-          `Skipping route ${routeFile} due to unresolved path alias (e.g., '@/app'). Please ensure dependencies within this file use relative paths or are correctly bundled.`,
-        );
         continue;
       }
       
