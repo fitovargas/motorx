@@ -10,7 +10,9 @@ Copiar el código fuente
 
 COPY . .
 
-SOLUCIÓN CRÍTICA: Hack para inyectar rutas API antes de la compilación de react-router-hono-server.
+SOLUCIÓN CRÍTICA: Hack para inyectar rutas API antes de la compilación.
+
+Se usa '&& ' para asegurar que todos los comandos se ejecuten como parte de una ÚNICA instrucción RUN.
 
 RUN mkdir -p build/server/src/app/ && 
 
