@@ -28,3 +28,4 @@ RUN chmod +x /start.sh
 EXPOSE 4000
 
 CMD ["npm", "start"]
+
