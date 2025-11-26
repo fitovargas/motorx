@@ -50,6 +50,16 @@ app.use('*', (c, next) => {
 
 app.use(contextStorage());
 
+// --- FIX CRÍTICO PARA EL ESTADO VERDE (Health Check) ---
+// La plataforma de despliegue necesita una forma rápida de saber que el servidor Node.js se inició.
+// Este endpoint responde inmediatamente con 200 OK.
+app.get('/health', (c) => {
+  // Puedes incluir un chequeo de la base de datos si es necesario, 
+  // pero para el despliegue inicial, 'OK' es suficiente.
+  return c.text('OK', 200);
+});
+// -----------------------------------------------------
+
 app.onError((err, c) => {
   if (c.req.method !== 'GET') {
     return c.json(
