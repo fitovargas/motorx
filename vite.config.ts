@@ -71,11 +71,11 @@ export default defineConfig({
     consoleToParent(),
     loadFontsFromTailwindSource(),
     addRenderIds(),
-    // INICIO CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES (2do intento: Orden de Plugins)
-    // Mover los plugins de resolución de rutas antes del plugin de React Router
-    tsconfigPaths(),
+    // CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES (3er intento: Eliminar plugin de tsconfig)
+    // El error persiste en la resolución de rutas relativas sin extensión (e.g., useAuth).
+    // tsconfigPaths() podría estar interfiriendo con la resolución de extensiones.
+    // tsconfigPaths(),
     aliases(),
-    // FIN CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES
     reactRouter(),
     layoutWrapperPlugin(),
   ],
