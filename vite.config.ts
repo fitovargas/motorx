@@ -71,9 +71,12 @@ export default defineConfig({
     consoleToParent(),
     loadFontsFromTailwindSource(),
     addRenderIds(),
-    reactRouter(),
+    // INICIO CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES (2do intento: Orden de Plugins)
+    // Mover los plugins de resolución de rutas antes del plugin de React Router
     tsconfigPaths(),
     aliases(),
+    // FIN CORRECCIÓN DE RESOLUCIÓN DE EXTENSIONES
+    reactRouter(),
     layoutWrapperPlugin(),
   ],
   resolve: {
