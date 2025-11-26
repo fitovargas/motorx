@@ -40,7 +40,6 @@ WORKDIR /code
 Copiar solo las dependencias de producción de la etapa builder
 
 COPY --from=builder /code/package.json ./
-
 RUN npm install --omit=dev
 
 Copiar los archivos de compilación desde la etapa builder
