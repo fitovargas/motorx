@@ -24,7 +24,7 @@ echo "--- DIAGNÓSTICO DE RUTA API INYECTADA ---" &&
 
 ls -l build/server/src/app/api && 
 
-echo "--- Inicia la compilación react-router build ---" && 
+echo "--- Inicia la compilación react-router build ---\n" && 
 
 npm run build
 
