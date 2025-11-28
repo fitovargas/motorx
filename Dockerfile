@@ -1,41 +1,42 @@
-FROM node:22-slim AS builder
-
+# --- ETAPA 1: DEPENDENCIAS (caché optimizado) ---
+FROM node:22-slim AS deps
 WORKDIR /code
-
-# Copiar archivos de dependencias primero (mejor cache)
 COPY package*.json ./
 RUN npm ci
 
-# Copiar código y build
+# --- ETAPA 2: BUILDER (compilación) ---
+FROM node:22-slim AS builder
+WORKDIR /code
+COPY --from=deps /code/node_modules ./node_modules
+COPY --from=deps /code/package*.json ./
 COPY . .
 RUN npm run build
 
-# Verificar y preparar archivos del servidor (flexible para diferentes frameworks)
-RUN if [ -f build/server/index.js ]; then \
-      mkdir -p dist && cp build/server/index.js dist/server.js; \
-    elif [ -f .next/standalone/server.js ]; then \
-      mkdir -p .next/standalone && cp .next/standalone/server.js dist/server.js; \
-    elif [ -f dist/server.js ]; then \
-      mkdir -p dist && cp dist/server.js dist/server.js; \
-    else \
-      echo "ERROR: No se encontró server.js en rutas esperadas" && exit 1; \
-    fi
-
+# --- ETAPA 3: PRODUCTION (imagen final ligera) ---
 FROM node:22-slim AS production
-
 WORKDIR /code
 
-# Solo dependencias de producción (sin duplicar instalación)
-COPY --from=builder /code/package*.json ./
+# Instalar SOLO producción (crítico para tamaño)
+COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copiar artifacts optimizados
-COPY --from=builder /code/dist ./dist
-COPY --from=builder /code/start.sh ./start.sh
-RUN chmod +x start.sh
+# Copiar build y preparar server.js flexiblemente
+COPY --from=builder /code/build ./build
+RUN mkdir -p dist && \
+    if [ -f build/server/index.js ]; then \
+      cp build/server/index.js dist/server.js; \
+    elif [ -f .next/standalone/server.js ]; then \
+      cp .next/standalone/server.js dist/server.js; \
+    elif [ -f dist/server.js ]; then \
+      true; \
+    else \
+      echo "ERROR: server.js no encontrado" && ls -la build/ || exit 1; \
+    fi && \
+    test -f dist/server.js
 
-# Verificación mínima en producción
-RUN test -f dist/server.js || (echo "FALLO: dist/server.js no existe" && exit 1)
+# start.sh si existe
+COPY start.sh* ./
+RUN chmod +x start.sh || true
 
 EXPOSE 4000
 CMD ["npm", "start"]
