@@ -56,6 +56,16 @@ COPY --from=builder /code/build ./build
 # **AJUSTE CLAVE:** Copiar la carpeta 'dist' que ahora debería contener server.js
 COPY --from=builder /code/dist ./dist
 
+# **Diagnóstico en Etapa Production (Nuevo)**
+RUN echo "--- Verificación de archivos en la imagen final ---" && \
+    ls -l dist/ && \
+    if [ -f dist/server.js ]; then \
+        echo "VERIFICACIÓN ÉXITO: dist/server.js encontrado."; \
+    else \
+        echo "VERIFICACIÓN FALLO: dist/server.js NO encontrado."; \
+        exit 1; \
+    fi
+
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
