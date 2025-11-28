@@ -1,4 +1,4 @@
-FROM node:22-slim AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /code
 
@@ -14,7 +14,7 @@ RUN mkdir -p build/server/src/app/ && \
     echo "--- Inicia la compilación react-router build ---" && \
     npm run build
 
-FROM node:22-slim AS production
+FROM node:20-slim AS production
 
 WORKDIR /code
 
