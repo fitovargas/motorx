@@ -12,29 +12,26 @@ COPY --from=deps /code/package*.json ./
 COPY . .
 RUN npm run build
 
-# --- ETAPA 3: PRODUCTION (imagen final ligera) ---
+# --- ETAPA 3: PRODUCTION (imagen final ~150MB) ---
 FROM node:22-slim AS production
 WORKDIR /code
 
-# Instalar SOLO producción (crítico para tamaño)
+# Instalar SOLO producción (elimina devDependencies)
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copiar build y preparar server.js flexiblemente
+# Copiar build y crear dist/server.js con verificación
 COPY --from=builder /code/build ./build
 RUN mkdir -p dist && \
     if [ -f build/server/index.js ]; then \
       cp build/server/index.js dist/server.js; \
-    elif [ -f .next/standalone/server.js ]; then \
-      cp .next/standalone/server.js dist/server.js; \
-    elif [ -f dist/server.js ]; then \
-      true; \
     else \
-      echo "ERROR: server.js no encontrado" && ls -la build/ || exit 1; \
+      echo "ERROR: build/server/index.js no encontrado" && \
+      ls -la build/ || exit 1; \
     fi && \
-    test -f dist/server.js
+    test -f dist/server.js || exit 1
 
-# start.sh si existe
+# start.sh opcional
 COPY start.sh* ./
 RUN chmod +x start.sh || true
 
