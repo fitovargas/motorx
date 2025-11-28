@@ -27,21 +27,21 @@ RUN mkdir -p build/server/src/app/ && \
     echo "--- Contenido de la carpeta 'build' después de la compilación ---" && \
     ls -R build/ && \
     
-    # **AJUSTE DE RUTA CRÍTICO:** Mover el archivo de entrada del servidor (que 'npm start' espera en 'dist/server.js')
+    # **AJUSTE DE RUTA CRÍTICO (Definitivo):**
+    # Basado en el log (build/server/index.js), copiamos directamente a la ruta esperada por 'npm start' (dist/server.js).
     
     mkdir -p dist && \
-    SERVER_FILE_PATH="" && \
-    if [ -f build/server/server.js ]; then SERVER_FILE_PATH="build/server/server.js"; \
-    elif [ -f build/server.js ]; then SERVER_FILE_PATH="build/server.js"; \
-    elif [ -f build/index.js ]; then SERVER_FILE_PATH="build/index.js"; \
-    elif [ -f build/server/index.js ]; then SERVER_FILE_PATH="build/server/index.js"; \
-    fi && \
+    SERVER_SOURCE="build/server/index.js" && \
+    SERVER_TARGET="dist/server.js" && \
     
-    if [ -n "$SERVER_FILE_PATH" ]; then \
-        echo "ÉXITO: Se encontró el archivo del servidor en $SERVER_FILE_PATH"; \
-        cp $SERVER_FILE_PATH dist/server.js; \
+    if [ -f "$SERVER_SOURCE" ]; then \
+        echo "ÉXITO: Copiando $SERVER_SOURCE a $SERVER_TARGET..."; \
+        cp $SERVER_SOURCE $SERVER_TARGET; \
+        echo "Contenido de 'dist/' después de la copia:"; \
+        ls dist/; \
     else \
-        echo "ADVERTENCIA: No se encontró el archivo de servidor en ninguna ruta esperada. EL DESPLIEGUE FALLARÁ."; \
+        echo "ERROR CRÍTICO: El archivo del servidor '$SERVER_SOURCE' no fue encontrado. El despliegue fallará."; \
+        exit 1; \
     fi
 
 FROM node:20-slim AS production
