@@ -22,22 +22,26 @@ RUN mkdir -p build/server/src/app/ && \
     cp -r ./src/app/api ./build/server/src/app/ && \
     echo "--- Inicia la compilación react-router build ---" && \
     npm run build && \
+    
     # Diagnóstico: Mostrar el contenido de la carpeta 'build' para ver dónde se generó server.js.
     echo "--- Contenido de la carpeta 'build' después de la compilación ---" && \
     ls -R build/ && \
     
-    # **AJUSTE DE RUTA CRÍTICO (Restaurado y Simplificado):** # Mover el archivo de entrada del servidor (que 'npm start' espera en 'dist/server.js')
-    # a la ubicación 'dist' si se encuentra en la raíz de 'build'.
+    # **AJUSTE DE RUTA CRÍTICO:** Mover el archivo de entrada del servidor (que 'npm start' espera en 'dist/server.js')
     
     mkdir -p dist && \
-    if [ -f build/server.js ]; then \
-        echo "Copiando build/server.js a dist/server.js..."; \
-        cp build/server.js dist/server.js; \
-    elif [ -f build/index.js ]; then \
-        echo "Copiando build/index.js a dist/server.js..."; \
-        cp build/index.js dist/server.js; \
+    SERVER_FILE_PATH="" && \
+    if [ -f build/server/server.js ]; then SERVER_FILE_PATH="build/server/server.js"; \
+    elif [ -f build/server.js ]; then SERVER_FILE_PATH="build/server.js"; \
+    elif [ -f build/index.js ]; then SERVER_FILE_PATH="build/index.js"; \
+    elif [ -f build/server/index.js ]; then SERVER_FILE_PATH="build/server/index.js"; \
+    fi && \
+    
+    if [ -n "$SERVER_FILE_PATH" ]; then \
+        echo "ÉXITO: Se encontró el archivo del servidor en $SERVER_FILE_PATH"; \
+        cp $SERVER_FILE_PATH dist/server.js; \
     else \
-        echo "ADVERTENCIA: No se encontró server.js ni index.js en la raíz de 'build'. El despliegue fallará."; \
+        echo "ADVERTENCIA: No se encontró el archivo de servidor en ninguna ruta esperada. EL DESPLIEGUE FALLARÁ."; \
     fi
 
 FROM node:20-slim AS production
