@@ -32,6 +32,9 @@ COPY --from=builder /code/package.json ./
 RUN npm install --omit=dev
 
 COPY --from=builder /code/build ./build
+# **AJUSTE CLAVE:** Copiar la carpeta 'dist' que contiene el punto de entrada del servidor (server.js)
+COPY --from=builder /code/dist ./dist
+
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
